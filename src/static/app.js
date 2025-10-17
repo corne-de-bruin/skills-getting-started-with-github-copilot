@@ -13,6 +13,17 @@ document.addEventListener("DOMContentLoaded", () => {
       // Clear loading message
       activitiesList.innerHTML = "";
 
+      // Helper: maak initialen uit e-mail/naam
+      function getInitials(text) {
+        if (!text) return "?";
+        const local = text.split("@")[0];
+        const parts = local.split(/[._\s-]+/).filter(Boolean);
+        if (parts.length === 1) {
+          return parts[0].slice(0, 2);
+        }
+        return (parts[0][0] + (parts[1][0] || "")).slice(0, 2);
+      }
+
       // Populate activities list
       Object.entries(activities).forEach(([name, details]) => {
         const activityCard = document.createElement("div");
@@ -20,12 +31,62 @@ document.addEventListener("DOMContentLoaded", () => {
 
         const spotsLeft = details.max_participants - details.participants.length;
 
-        activityCard.innerHTML = `
-          <h4>${name}</h4>
-          <p>${details.description}</p>
-          <p><strong>Schedule:</strong> ${details.schedule}</p>
-          <p><strong>Availability:</strong> ${spotsLeft} spots left</p>
-        `;
+        // Basic info
+        const title = document.createElement("h4");
+        title.textContent = name;
+        activityCard.appendChild(title);
+
+        const desc = document.createElement("p");
+        desc.textContent = details.description;
+        activityCard.appendChild(desc);
+
+        const scheduleP = document.createElement("p");
+        scheduleP.innerHTML = `<strong>Schedule:</strong> ${details.schedule}`;
+        activityCard.appendChild(scheduleP);
+
+        const availP = document.createElement("p");
+        availP.innerHTML = `<strong>Availability:</strong> ${spotsLeft} spots left`;
+        activityCard.appendChild(availP);
+
+        // Participants section
+        const participantsSection = document.createElement("div");
+        participantsSection.className = "participants-section";
+        const participantsTitle = document.createElement("p");
+        participantsTitle.innerHTML = `<strong>Participants:</strong>`;
+        participantsSection.appendChild(participantsTitle);
+
+        const listWrapper = document.createElement("div");
+        listWrapper.className = "participants-list";
+        const ul = document.createElement("ul");
+
+        if (Array.isArray(details.participants) && details.participants.length > 0) {
+          details.participants.forEach((p) => {
+            const li = document.createElement("li");
+            li.className = "participant-item";
+
+            const avatar = document.createElement("span");
+            avatar.className = "avatar";
+            avatar.textContent = getInitials(p);
+
+            const meta = document.createElement("span");
+            meta.className = "participant-meta";
+            // show full email or name; prefer display-friendly text
+            meta.textContent = p;
+
+            li.appendChild(avatar);
+            li.appendChild(meta);
+            ul.appendChild(li);
+          });
+        } else {
+          const li = document.createElement("li");
+          li.className = "participant-item";
+          li.textContent = "No participants yet.";
+          ul.appendChild(li);
+        }
+
+        listWrapper.appendChild(ul);
+        participantsSection.appendChild(listWrapper);
+        activityCard.appendChild(participantsSection);
 
         activitiesList.appendChild(activityCard);
 
